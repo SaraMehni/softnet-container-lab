@@ -1,0 +1,36 @@
+name: assignment2
+
+topology:
+  nodes:
+    rt1:
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+      exec:
+        - ip addr add 192.168.1.1/24 dev eth1
+        - ip addr add 192.168.2.1/24 dev eth2
+        - sysctl -w net.ipv4.ip_forward=1
+        - ip -6 addr add 2001:db8:1::1/64 dev eth1
+        - ip -6 addr add 2001:db8:2::1/64 dev eth2
+        - sysctl -w net.ipv6.conf.all.forwarding=1
+
+    hs1:
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+      exec:
+        - ip addr add 192.168.1.2/24 dev eth1
+        - ip route add default via 192.168.1.1
+        - ip -6 addr add 2001:db8:1::2/64 dev eth1
+        - ip -6 route add default via 2001:db8:1::1
+
+    hs2:
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+      exec:
+        - ip addr add 192.168.2.2/24 dev eth1
+        - ip route add default via 192.168.2.1
+        - ip -6 addr add 2001:db8:2::2/64 dev eth1
+        - ip -6 route add default via 2001:db8:2::1
+
+  links:
+    - endpoints: ["hs1:eth1", "rt1:eth1"]
+    - endpoints: ["hs2:eth1", "rt1:eth2"]
